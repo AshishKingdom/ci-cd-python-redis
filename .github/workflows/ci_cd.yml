@@ -43,7 +43,7 @@ jobs:
           host: ${{ secrets.AWS_EC2_HOST }}
           username: ${{ secrets.AWS_EC2_USERNAME }}
           key: ${{ secrets.AWS_EC2_SECRET_KEY }}
-          source: "docker-compose.yml, nginx/nginx.conf"
+          source: "docker-compose.yml, nginx.conf"
           target: .
       - name: run docker-compose
         uses: appleboy/ssh-action@v1.0.0

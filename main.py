@@ -5,11 +5,14 @@ from database import engine, get_db, Base
 from models import User
 from schemas import UserCreate, User as UserSchema
 import aioredis
+import os
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost")
 
 app = FastAPI()
 
 # Initialize Redis
-redis = aioredis.from_url("redis://localhost")
+redis = aioredis.from_url(REDIS_URL)
 
 @app.on_event("startup")
 async def startup():

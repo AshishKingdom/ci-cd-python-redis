@@ -52,8 +52,8 @@ jobs:
           username: ${{ secrets.AWS_EC2_USERNAME }}
           key: ${{ secrets.AWS_EC2_SECRET_KEY }}
           script: |
-            docker compose down
+            docker-compose down
             docker rmi -f $(docker images -q)
-            docker compose pull
-            docker compose up -d
+            docker-compose pull
+            docker-compose up -d
         

@@ -2,9 +2,10 @@ version: '3.8'
 
 services:
   fastapi:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: ashishkingdom/ci-cd-python-redis:latest
     container_name: fastapi_app
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///./test.db

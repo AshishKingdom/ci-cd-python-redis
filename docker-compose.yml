@@ -9,13 +9,7 @@ services:
     container_name: fastapi_app
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///./test.db
-      - REDIS_URL=redis://redis:6379
-    networks:
-      - app_network
-
-  redis:
-    image: redis:7.2-alpine
-    container_name: redis_cache
+      - REDIS_URL=${REDIS_URL}
     networks:
       - app_network
 

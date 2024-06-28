@@ -40,7 +40,7 @@ jobs:
       - name: Create ENV file
         run: |
           touch .env
-          echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
+          echo "REDIS_URL=${{ vars.AWS_ELASTICCACHE_URL }}" >> .env
       - name: copy file via ssh key
         uses: appleboy/scp-action@v0.1.7
         with:

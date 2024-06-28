@@ -34,9 +34,6 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "ecr_image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-    outputs:
-      ecr_image: ${{ steps.build-image.outputs.ecr_image }}
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3
       #   with:
@@ -64,11 +61,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
       - name: Create ENV file
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME}}
         run: |
           touch .env
           echo "REDIS_URL=${{ vars.AWS_ELASTICCACHE_URL }}" >> .env
-          echo "ECR_IMAGE_REPO=${{ needs.build_and_push.outputs.ecr_image }}" >> .env
+          echo "ECR_IMAGE_REPO=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> .env
       - name: copy file via ssh key
         uses: appleboy/scp-action@v0.1.7
         with:

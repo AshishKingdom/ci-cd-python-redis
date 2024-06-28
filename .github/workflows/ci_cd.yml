@@ -10,26 +10,51 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          ecr: auto
-          logout: true
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
-      - name: Extract metadata (labels, tags, etc.) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ashishkingdom/ci-cd-python-redis
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ashishkingdom/ci-cd-python-redis:latest
-          labels: ${{ steps.meta.outputs.labels }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Get commit hash
+        id: commit_hash
+        run: echo "::set-output name=hash::$(echo $GITHUB_SHA | cut -c1-7)"
+      - name: Get timestamp
+        id: timestamp
+        run: echo "::set-output name=timestamp::$(date +'%Y%m%d%H%M%S')"
+      - name: Build, tag and push image to AWS ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME}}
+          IMAGE_TAG: ${{ steps.commit_hash.outputs.hash }}-${{ steps.timestamp.outputs.timestamp }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=ecr_image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     ecr: auto
+      #     logout: true
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+      # - name: Extract metadata (labels, tags, etc.) for Docker
+      #   id: meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: ashishkingdom/ci-cd-python-redis
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     file: ./Dockerfile
+      #     push: true
+      #     tags: ashishkingdom/ci-cd-python-redis:latest
+      #     labels: ${{ steps.meta.outputs.labels }}
   deploy:
     runs-on: ubuntu-latest
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -41,6 +66,7 @@ jobs:
         run: |
           touch .env
           echo "REDIS_URL=${{ vars.AWS_ELASTICCACHE_URL }}" >> .env
+          echo "ECR_IMAGE_REPO=${{ needs.build_and_push.outputs.ecr_image }}" >> .env
       - name: copy file via ssh key
         uses: appleboy/scp-action@v0.1.7
         with:

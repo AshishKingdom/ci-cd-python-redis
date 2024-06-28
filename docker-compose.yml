@@ -5,7 +5,7 @@ services:
     # build:
     #   context: .
     #   dockerfile: Dockerfile
-    image: ashishkingdom/ci-cd-python-redis:latest
+    image: ${ECR_IMAGE_REPO}
     container_name: fastapi_app
     environment:
       - DATABASE_URL=sqlite+aiosqlite:///./test.db

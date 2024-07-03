@@ -97,6 +97,7 @@ jobs:
           script: |
             aws ecr get-login-password | sudo docker login -u AWS --password-stdin "https://$(aws sts get-caller-identity --query 'Account' --output text).dkr.ecr.us-east-1.amazonaws.com"
             sudo docker-compose down
-            sudo docker rmi -f $(docker images -q)
+            sudo docker-compose down --remove-orphans
+            sudo docker rmi -f $(sudo docker images -q)
             sudo docker-compose pull
             sudo docker-compose up -d

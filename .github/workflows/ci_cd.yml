@@ -78,8 +78,8 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME}}
         run: |
           touch .env
-          echo "REDIS_URL=${{ vars.AWS_ELASTICCACHE_URL }}" >> .env
           echo "ECR_IMAGE_REPO=$ECR_REGISTRY/$ECR_REPOSITORY:${{needs.build_and_push.outputs.image_tag}}" >> .env
+        # need to add more env vars here as per the requirement
       - name: copy file via ssh key
         uses: appleboy/scp-action@v0.1.7
         with:
